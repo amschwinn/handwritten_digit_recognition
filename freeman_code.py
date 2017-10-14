@@ -21,16 +21,17 @@ def freeman_code(img):
     last_row = -1
     last_col = -1
     code = []
-    while ((current_col != start_col or current_row != start_row) and not start) or start:
+    while ((current_col != start_col or current_row != start_row) and not start and direction != 8) or start:
         start = False
         direction, new_current_row, new_current_col = next_direction(img, current_row, current_col, rows, cols, last_row, last_col)
         last_row = current_row
         last_col = current_col
         current_row = new_current_row
         current_col = new_current_col
+        img[last_row][last_col] = 0
         code.append(direction)
 
-    return code
+    return code[:-1]
 
 
 # input: image, current row and column, total rows and columns, previous row and column
@@ -75,6 +76,8 @@ def next_direction(img, current_row, current_col, rows, cols, last_row, last_col
         elif not top:
             if img[current_row - 1][current_col - 1] == 1 and ((current_row - 1) != last_row or (current_col - 1) != last_col):
                 return 7, current_row - 1, current_col - 1
+
+    return 8, -1, -1
 
 
 test_image0 =  [[0,0,1,0,0],
