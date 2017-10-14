@@ -53,28 +53,28 @@ def next_direction(img, current_row, current_col, rows, cols, last_row, last_col
 
     # loop through directions in order to determine next direction
     if not top:
-        if img[current_row - 1][current_col] == 1 and ((current_row - 1) != last_row or current_col != last_col):
+        if img[current_row - 1][current_col] == 1:
             return 0, current_row - 1, current_col
         if not right:
-            if img[current_row - 1][current_col + 1] == 1 and ((current_row - 1) != last_row or (current_col + 1) != last_col):
+            if img[current_row - 1][current_col + 1] == 1:
                 return 1, current_row - 1, current_col + 1
     if not right:
-        if img[current_row][current_col + 1] == 1 and ((current_row) != last_row or (current_col + 1) != last_col):
+        if img[current_row][current_col + 1] == 1:
             return 2, current_row, current_col + 1
         if not bottom:
-            if img[current_row + 1][current_col + 1] == 1 and ((current_row + 1) != last_row or (current_col + 1) != last_col):
+            if img[current_row + 1][current_col + 1] == 1:
                 return 3, current_row + 1, current_col + 1
     if not bottom:
-        if img[current_row + 1][current_col] == 1 and ((current_row + 1) != last_row or current_col != last_col):
+        if img[current_row + 1][current_col] == 1:
             return 4, current_row + 1, current_col
         if not left:
-            if img[current_row + 1][current_col - 1] == 1 and ((current_row + 1) != last_row or (current_col - 1) != last_col):
+            if img[current_row + 1][current_col - 1] == 1:
                 return 5, current_row + 1, current_col - 1
     if not left:
-        if img[current_row][current_col - 1] == 1 and (current_row != last_row or (current_col - 1) != last_col):
+        if img[current_row][current_col - 1] == 1:
             return 6, current_row, current_col - 1
         elif not top:
-            if img[current_row - 1][current_col - 1] == 1 and ((current_row - 1) != last_row or (current_col - 1) != last_col):
+            if img[current_row - 1][current_col - 1] == 1:
                 return 7, current_row - 1, current_col - 1
 
     return 8, -1, -1
