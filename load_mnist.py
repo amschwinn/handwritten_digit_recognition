@@ -6,6 +6,24 @@ import cv2
 from skimage.filters import threshold_otsu
 from PIL import Image
 from pylab import contour
+from skimage.filters import roberts, sobel, scharr, prewitt
+from skimage import feature
+from skimage.morphology import erosion, dilation, opening, closing, white_tophat
+from skimage.morphology import black_tophat, skeletonize, convex_hull_image
+from skimage.morphology import disk
+
+def plot_comparison(original, filtered, filter_name):
+
+    fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(8, 4), sharex=True,
+                                   sharey=True)
+    ax1.imshow(original, cmap=plt.cm.gray)
+    ax1.set_title('original')
+    ax1.axis('off')
+    ax1.set_adjustable('box-forced')
+    ax2.imshow(filtered, cmap=plt.cm.gray)
+    ax2.set_title(filter_name)
+    ax2.axis('off')
+    ax2.set_adjustable('box-forced')
 
 def flat_to_one_hot(labels):
     num_classes = np.unique(labels).shape[0]
@@ -35,14 +53,20 @@ validation_images = validation_images.reshape(validation_images.shape[0],1,28,28
 	# Return the data:
      #return (train_images,train_labels),(validation_images,validation_labels)
 #%%
-A = train_images[0,0];
+A = train_images[10,0];
 plt.imshow(A);
 #ret2,th2 = cv2.threshold(A,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 thresh = threshold_otsu(A);
 binary = A > thresh
 plt.imshow(binary)
-contour_image = contour(A, levels = [245], colors='black', origin='image')
-c_i = np.array(contour_image).astype('int32')
-CS = plt.contour(binary)
+#contour_image = contour(A, levels = [245], colors='black', origin='image')
+#c_i = np.array(contour_image).astype('int32')
+#CS = plt.contour(binary)
+#%%
+im_edge = sobel(A)
+th = threshold_otsu(im_edge)
+im_binary = im_edge > thresh
+plt.imshow(im_binary, cmap=plt.cm.gray)
 
-
+#sk = skeletonize(im_binary == 1)
+#plot_comparison(im_binary, sk, 'skeletonize')
