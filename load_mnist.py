@@ -53,17 +53,18 @@ validation_images = validation_images.reshape(validation_images.shape[0],1,28,28
 	# Return the data:
      #return (train_images,train_labels),(validation_images,validation_labels)
 #%%
-A = train_images[10,0];
-plt.imshow(A);
+A = train_images[520,0];
+plt.imshow(A)
 #ret2,th2 = cv2.threshold(A,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 thresh = threshold_otsu(A);
 binary = A > thresh
-plt.imshow(binary)
+img_fill_holes = ndimage.binary_fill_holes(binary).astype(bool)
+plt.imshow(img_fill_holes, cmap=plt.cm.gray)
 #contour_image = contour(A, levels = [245], colors='black', origin='image')
 #c_i = np.array(contour_image).astype('int32')
 #CS = plt.contour(binary)
 #%%
-im_edge = sobel(A)
+im_edge = sobel(img_fill_holes)
 th = threshold_otsu(im_edge)
 im_binary = im_edge > thresh
 plt.imshow(im_binary, cmap=plt.cm.gray)
