@@ -11,6 +11,8 @@ from skimage import feature
 from skimage.morphology import erosion, dilation, opening, closing, white_tophat
 from skimage.morphology import black_tophat, skeletonize, convex_hull_image
 from skimage.morphology import disk
+from scipy import ndimage 
+from skimage.measure import label, regionprops
 
 def plot_comparison(original, filtered, filter_name):
 
