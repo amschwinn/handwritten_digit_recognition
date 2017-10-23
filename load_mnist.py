@@ -1,18 +1,18 @@
 import numpy as np
 import pandas as pd
-import os
+#import os
 from matplotlib import pyplot as plt
-import cv2
+#import cv2
 from skimage.filters import threshold_otsu
-from PIL import Image
-from pylab import contour
+#from PIL import Image
+#from pylab import contour
 from skimage.filters import roberts, sobel, scharr, prewitt
-from skimage import feature
-from skimage.morphology import erosion, dilation, opening, closing, white_tophat
-from skimage.morphology import black_tophat, skeletonize, convex_hull_image
-from skimage.morphology import disk
+#from skimage import feature
+#from skimage.morphology import erosion, dilation, opening, closing, white_tophat
+#from skimage.morphology import black_tophat, skeletonize, convex_hull_image
+#from skimage.morphology import disk
 from scipy import ndimage 
-from skimage.measure import label, regionprops
+#from skimage.measure import label, regionprops
 
 def plot_comparison(original, filtered, filter_name):
 
