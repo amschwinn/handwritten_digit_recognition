@@ -1,4 +1,6 @@
 from collections import Counter
+from random import shuffle, randrange
+from math import floor
 
 # input: two lists of integers representing the freeman codes of two images
 # output: the edit distance between the two lists
@@ -33,17 +35,73 @@ def direction_cost(x,y):
     direction2 = (min(x,y)+ 8) - max(x,y)
     return min(direction1,direction2)
 
-
+# k-nearest Neighbors
 # input: image to be classified, training features, training labels (same order), k
 # output: majority class of k-nearest neighbors to input image
-# no optimizations have been used for this algorithm
 def knn(im1, X, labels, k):
     distances = []
     for example in X:
         distances.append(edit_distance(im1, example))
     knn_classes = [y for _,y in sorted(zip(distances, labels))[:k]]
     counter = Counter(knn_classes)
-    return counter.most_common(k)[0][0]
+    return counter.most_common(1)[0][0]
+
+# function that removes outliers and examples in the bayesian error region
+# input: features, labels of full dataset
+# output: features, labels of cleaned dataset
+def remove_outliers_bayesian_error(X, labels):
+    n = len(labels)
+    shuffled_dataset = shuffle(list(zip(X, labels)))
+    X, labels = zip(*shuffled_dataset)
+    X1 = X[0:floor(n/2)]
+    X2 = X[floor(n/2)+1:n]
+    labels1 = labels[0:floor(n/2)]
+    labels2 = labels[floor(n/2) + 1:n]
+    S1_size = len(labels1)
+    S2_size = len(labels2)
+    prev_S1_size = 0
+    prev_S2_size = 0
+    while(not S1_size == prev_S1_size and not S2_size == prev_S2_size): #while sets are not stable
+        prev_S1_size = S1_size
+        prev_S2_size = S2_size
+        # classify S1 with S2 and remove misclassified
+        for i in range(S1_size,0,-1):# have to go in reverse order to not throw off indices when deleting missclassified
+            pred_class = knn(X1[i],X2,labels2,k=1)
+            if not pred_class == labels1[i]:
+                del labels1[i]
+                del X1[i]
+        # classify S2 with S1 and remove misclassified
+        for i in range(S2_size,0,-1):
+            pred_class = knn(X2[i],X1,labels1,k=1)
+            if not pred_class == labels2[i]:
+                del labels2[i]
+                del X2[i]
+        S1_size = len(labels1)
+        S2_size = len(labels2)
+    return X1.extend(X2), labels1.extend(labels2)
+
+# function that removes irrelevant examples from dataset
+# input: features, labels of full dataset
+# output: features, labels of cleaned dataset
+def remove_irrelevant(X, labels):
+    # randomly select example to start in storage
+    start_index = randrange(0,len(labels))
+    storageX = X[start_index]
+    del X[start_index]
+    storageY = labels[start_index]
+    del labels[start_index]
+    storage_size = 1
+    prev_storage_size = 0
+    while(not storage_size == prev_storage_size):
+        prev_storage_size = storage_size
+        for features, label in zip(X,labels):
+            if not knn(features, storageX, storageY, k=1) == label:
+                storageX.append(features)
+                storageY.append(label)
+        storage_size = len(storageY)
+    return storageX, storageY
+
+
 
 
 
@@ -51,7 +109,7 @@ im1 = [1,2,3]
 im2 = [2,3,4,5,6,7]
 print edit_distance(im1,im2)
 print edit_distance(im1,im2,directions=True)
-exit()
+
 X = [[1,2,1],[4,5,2],[2,1,2],[1,2,5]]
 labels = [1,2,3,1]
 print knn(im1,X,labels,2)
