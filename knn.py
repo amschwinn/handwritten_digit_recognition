@@ -1,6 +1,7 @@
 from collections import Counter
 from random import shuffle, randrange
-from math import floor
+from math import floor, sqrt
+from numpy import zeros
 
 # input: two lists of integers representing the freeman codes of two images
 # output: the edit distance between the two lists
@@ -35,16 +36,79 @@ def direction_cost(x,y):
     direction2 = (min(x,y)+ 8) - max(x,y)
     return min(direction1,direction2)
 
+# euclidean distance calculations
+# input: two lists (histograms of freeman codes)
+# output: distance between two lists
+def euclidean_distance(im1, im2):
+    total = 0
+    for i in xrange(8):
+        total += (im1[i] - im2[i]) ^ 2
+    return sqrt(total)
+
 # k-nearest Neighbors
 # input: image to be classified, training features, training labels (same order), k
 # output: majority class of k-nearest neighbors to input image
-def knn(im1, X, labels, k):
+def knn(im1, X, labels, k, edit = True):
     distances = []
     for example in X:
-        distances.append(edit_distance(im1, example))
+        if edit:
+            distances.append(edit_distance(im1, example))
+        else: #euclidean
+            distances.append(euclidean_distance(im1, example))
     knn_classes = [y for _,y in sorted(zip(distances, labels))[:k]]
     counter = Counter(knn_classes)
     return counter.most_common(1)[0][0]
+
+# k nearest neighbors with sped-up nieghbor seeking
+# input: im1 to be classified, training examples, training labels, k,
+# precomputed distances between all training examples,
+# whether edit distance should be used (as opposed to euclidean)
+# output: class prediction of image
+def knn_efficient(im1, X, labels, k, precomputed_distances, edit= True):
+    n = len(labels)
+    candidates = list(xrange(n))    # all examples are candidates
+    lower_bounds = [0 for i in xrange(n)]
+    min_dist = float("inf")
+
+    # until no more candidates
+    while(candidates):
+        best_candidate = min(candidates, key=lambda x: lower_bounds[x]) # select best lower bound
+        # compute distance from best candidate to example
+        if edit:
+            best_cand_dist = edit_distance(im1, X[best_candidate], directions=False)
+        else:
+            best_cand_dist = euclidean_distance(im1, X[best_candidate])
+        # update best so far if closer
+        if best_cand_dist < min_dist:
+            min_dist = best_cand_dist
+            best_index = best_candidate
+        # remove candidates whose lower bound is greater than min distance
+        old_candidates = candidates
+        candidates = []
+        for x in old_candidates:
+            lower_bound = abs(best_cand_dist - precomputed_distances[best_candidate][x])
+            # update lower bound if possible
+            lower_bounds[x] = max(lower_bounds[x], lower_bound)
+            if lower_bounds[x] < min_dist:
+                candidates.append(x)
+    return labels[best_index]
+
+# function to precompute distances before efficient knn search
+# input: training features, boolean for distance (True = edit distance, False = Euclidean distance)
+# output: n by n matrix of distances between all examples in training set
+def precompute_distances(X, edit = True):
+    n = len(X)
+    distance_matrix = zeros((n, n))
+    for i in xrange(n):
+        for j in xrange(n):
+            if distance_matrix[j][i] > 0:
+                distance_matrix[i][j] = distance_matrix[j][i]       # use symmetry to make more efficient
+            elif not i == j:
+                if edit:
+                    distance_matrix[i][j] = edit_distance(X[i],X[j],directions=False)
+                else:
+                    distance_matrix[i][j] = euclidean_distance(X[i],X[j])
+    return distance_matrix
 
 # function that removes outliers and examples in the bayesian error region
 # input: features, labels of full dataset
@@ -102,15 +166,14 @@ def remove_irrelevant(X, labels):
     return storageX, storageY
 
 
-
-
+#
+# im2 = [2,3,4,5,6,7]
+# print edit_distance(im1,im2)
+# print edit_distance(im1,im2,directions=True)
 
 im1 = [1,2,3]
-im2 = [2,3,4,5,6,7]
-print edit_distance(im1,im2)
-print edit_distance(im1,im2,directions=True)
-
 X = [[1,2,1],[4,5,2],[2,1,2],[1,2,5]]
+precomputed = precompute_distances(X, True)
 labels = [1,2,3,1]
-print knn(im1,X,labels,2)
+print knn_efficient(im1,X,labels,1,precomputed)
 
