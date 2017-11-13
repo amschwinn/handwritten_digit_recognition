@@ -22,7 +22,7 @@ def edit_distance(im1, im2, directions=False):
             else:
                 if directions:
                     distance[i][j] = min(distance[i-1][j] + 1, distance[i][j-1] + 1,
-                                         distance[i-1][j-1] + float(direction_cost(im1[i-1],im2[j-1])) / 8.0)
+                                         distance[i-1][j-1] + float(direction_cost(im1[i-1],im2[j-1])) / 4.0)
                 else:
                     distance[i][j] = (min(distance[i-1][j], distance[i][j-1], distance[i-1][j-1])) + 1
     return distance[m][n]

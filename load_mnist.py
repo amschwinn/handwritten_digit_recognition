@@ -37,7 +37,7 @@ def flat_to_one_hot(labels):
 
 
 validation_size=2000
-data = pd.read_csv('MLDM_Project/train.csv')
+data = pd.read_csv('Data/train.csv')
 images = data.iloc[:,1:].values
 labels = data[['label']].values.ravel()
 # Convert the images from uint8 to double:
