@@ -30,7 +30,7 @@ def edit_distance(im1, im2, directions=False):
 # function that computes the directional distance between two integers in a freeman code
 # computes the distance clockwise and counterclockwise around direction key, returns minimum
 # input: two integers representing directions from freeman codes
-# output: minimum distance required to change from one direction two another
+# output: minimum distance required to change from one direction too another
 def direction_cost(x,y):
     direction1 = abs(x-y)
     direction2 = (min(x,y)+ 8) - max(x,y)
@@ -170,10 +170,11 @@ def remove_irrelevant(X, labels):
 # im2 = [2,3,4,5,6,7]
 # print edit_distance(im1,im2)
 # print edit_distance(im1,im2,directions=True)
-
-im1 = [1,2,3]
-X = [[1,2,1],[4,5,2],[2,1,2],[1,2,5]]
-precomputed = precompute_distances(X, True)
-labels = [1,2,3,1]
-print knn_efficient(im1,X,labels,1,precomputed)
+if __name__ == "__main__":
+    
+    im1 = [1,2,3]
+    X = [[1,2,1],[4,5,2],[2,1,2],[1,2,5]]
+    precomputed = precompute_distances(X, True)
+    labels = [1,2,3,1]
+    print knn_efficient(im1,X,labels,1,precomputed)
 

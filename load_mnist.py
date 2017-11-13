@@ -35,7 +35,6 @@ def flat_to_one_hot(labels):
     labels_one_hot.flat[index_offset + labels.ravel()] = 1
     return labels_one_hot
 
-
 validation_size=2000
 data = pd.read_csv('Data/train.csv')
 images = data.iloc[:,1:].values

@@ -21,6 +21,7 @@ def freeman_code(img):
     last_row = -1
     last_col = -1
     code = []
+    direction = 0
     while ((current_col != start_col or current_row != start_row) and not start and direction != 8) or start:
         start = False
         direction, new_current_row, new_current_col = next_direction(img, current_row, current_col, rows, cols, last_row, last_col)
