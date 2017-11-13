@@ -14,6 +14,19 @@ from skimage.filters import roberts, sobel, scharr, prewitt
 from scipy import ndimage 
 #from skimage.measure import label, regionprops
 
+
+def img_preprocess(img):
+        
+    thresh = threshold_otsu(img)
+    img_binary = img > thresh
+    img_fill_holes = ndimage.binary_fill_holes(img_binary).astype(bool)
+    img_edge = sobel(img_fill_holes)
+    th = threshold_otsu(img_edge)
+    
+    binary_image = img_edge > th
+    #plt.imshow(binary_image, cmap = plt.cm.gray)
+    return binary_image
+
 def plot_comparison(original, filtered, filter_name):
 
     fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(8, 4), sharex=True,
@@ -36,7 +49,7 @@ def flat_to_one_hot(labels):
     return labels_one_hot
 
 validation_size=2000
-data = pd.read_csv('Data/train.csv')
+data = pd.read_csv('train.csv')
 images = data.iloc[:,1:].values
 labels = data[['label']].values.ravel()
 # Convert the images from uint8 to double:
@@ -54,21 +67,34 @@ validation_images = validation_images.reshape(validation_images.shape[0],1,28,28
 	# Return the data:
      #return (train_images,train_labels),(validation_images,validation_labels)
 #%%
-A = train_images[520,0];
-plt.imshow(A)
-#ret2,th2 = cv2.threshold(A,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-thresh = threshold_otsu(A);
-binary = A > thresh
-img_fill_holes = ndimage.binary_fill_holes(binary).astype(bool)
-plt.imshow(img_fill_holes, cmap=plt.cm.gray)
-#contour_image = contour(A, levels = [245], colors='black', origin='image')
-#c_i = np.array(contour_image).astype('int32')
-#CS = plt.contour(binary)
-#%%
-im_edge = sobel(img_fill_holes)
-th = threshold_otsu(im_edge)
-im_binary = im_edge > thresh
-plt.imshow(im_binary, cmap=plt.cm.gray)
+
+
+#L_train = len(train_images)
+#
+#for i in xrange(L_train):
+#    train_image = train_images[i, 0]
+#    binary_image = img_preprocess(train_image)
+#    plt.imshow(binary_image, cmap = plt.cm.gray)
+
+
+
+        
+    
+#A = train_images[520,0];
+#plt.imshow(A)
+##ret2,th2 = cv2.threshold(A,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+#thresh = threshold_otsu(A);
+#binary = A > thresh
+#img_fill_holes = ndimage.binary_fill_holes(binary).astype(bool)
+#plt.imshow(img_fill_holes, cmap=plt.cm.gray)
+##contour_image = contour(A, levels = [245], colors='black', origin='image')
+##c_i = np.array(contour_image).astype('int32')
+##CS = plt.contour(binary)
+##%%
+#im_edge = sobel(img_fill_holes)
+#th = threshold_otsu(im_edge)
+#im_binary = im_edge > th
+#plt.imshow(im_binary, cmap=plt.cm.gray)
 
 #sk = skeletonize(im_binary == 1)
 #plot_comparison(im_binary, sk, 'skeletonize')
