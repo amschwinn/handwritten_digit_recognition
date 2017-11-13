@@ -17,16 +17,16 @@ from skimage.filters.rank import median
 #from skimage.measure import label, regionprops
 
 
-def img_preprocess(img):
+ddef img_preprocess(img):
     
-    img = median(img, disk(5))
-    thresh = threshold_otsu(img)
-    img_binary = img > thresh
+    img_medfilt = median(img)
+    thresh = threshold_otsu(img_medfilt)
+    img_binary = img_medfilt > thresh
     
     img_edge = sobel(img_binary)    
     thresh_edge = threshold_otsu(img_edge)
     
-    img_binary = img_edge > thresh_edge
+    binary_image = img_edge > thresh_edge
     #img_fill_holes = ndimage.binary_fill_holes(img_binary).astype(bool)
     #img_edge = sobel(img_fill_holes)
     #th = threshold_otsu(img_edge)
@@ -34,7 +34,7 @@ def img_preprocess(img):
     #binary_image = img_fill_holes
     #binary_image = img_binary
     #plt.imshow(binary_image, cmap = plt.cm.gray)
-    return img_binary
+    return binary_image
 
 def plot_comparison(original, filtered, filter_name):
 
