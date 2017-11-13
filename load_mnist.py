@@ -12,20 +12,29 @@ from skimage.filters import roberts, sobel, scharr, prewitt
 #from skimage.morphology import black_tophat, skeletonize, convex_hull_image
 #from skimage.morphology import disk
 from scipy import ndimage 
+from skimage.morphology import disk
+from skimage.filters.rank import median
 #from skimage.measure import label, regionprops
 
 
 def img_preprocess(img):
-        
+    
+    img = median(img, disk(5))
     thresh = threshold_otsu(img)
     img_binary = img > thresh
-    img_fill_holes = ndimage.binary_fill_holes(img_binary).astype(bool)
-    img_edge = sobel(img_fill_holes)
-    th = threshold_otsu(img_edge)
     
-    binary_image = img_edge > th
+    img_edge = sobel(img_binary)    
+    thresh_edge = threshold_otsu(img_edge)
+    
+    img_binary = img_edge > thresh_edge
+    #img_fill_holes = ndimage.binary_fill_holes(img_binary).astype(bool)
+    #img_edge = sobel(img_fill_holes)
+    #th = threshold_otsu(img_edge)
+    
+    #binary_image = img_fill_holes
+    #binary_image = img_binary
     #plt.imshow(binary_image, cmap = plt.cm.gray)
-    return binary_image
+    return img_binary
 
 def plot_comparison(original, filtered, filter_name):
 
