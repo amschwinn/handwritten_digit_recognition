@@ -14,6 +14,7 @@ from skimage.filters import roberts, sobel, scharr, prewitt
 from scipy import ndimage 
 #from skimage.measure import label, regionprops
 
+
 def img_preprocess(img):
         
     thresh = threshold_otsu(img)
