@@ -28,7 +28,19 @@ def img_preprocess(img):
     thresh_edge = threshold_otsu(img_edge)
     
     binary_image = img_edge > thresh_edge
-
+    img_fill_holes = ndimage.binary_fill_holes(binary_image).astype(bool)
+    
+    binary_image = sobel(img_fill_holes)
+    thresh_edge = threshold_otsu(binary_image)
+    binary_image = binary_image > thresh_edge
+    
+    #img_fill_holes = ndimage.binary_fill_holes(img_binary).astype(bool)
+    #img_edge = sobel(img_fill_holes)
+    #th = threshold_otsu(img_edge)
+    
+    #binary_image = img_fill_holes
+    #binary_image = img_binary
+    #plt.imshow(binary_image, cmap = plt.cm.gray)
     return binary_image
 
 def plot_comparison(original, filtered, filter_name):
