@@ -64,24 +64,33 @@ def flat_to_one_hot(labels):
     labels_one_hot.flat[index_offset + labels.ravel()] = 1
     return labels_one_hot
 
-validation_size=2000
-data = pd.read_csv('train.csv')
-images = data.iloc[:,1:].values
-labels = data[['label']].values.ravel()
-# Convert the images from uint8 to double:
-images = np.multiply(images,1.0/255.0)
-# Convert the labels to one hot encoding:
-labels = flat_to_one_hot(labels)
-# Split the data into validation and training data:
-validation_images = images[:validation_size]
-validation_labels = labels[:validation_size]
-train_images = images[validation_size:]
-train_labels = labels[validation_size:]
-# Convert the images from flat to matrix form:
-train_images = train_images.reshape(train_images.shape[0],1,28,28)
-validation_images = validation_images.reshape(validation_images.shape[0],1,28,28)
-	# Return the data:
-     #return (train_images,train_labels),(validation_images,validation_labels)
+def load(train_file,validation_size=2000):
+    #validation_size=2000
+    #data = pd.read_csv('train.csv')
+    data = pd.read_csv(train_file)
+    images = data.iloc[:,1:].values
+    labels = data[['label']].values.ravel()
+    # Convert the images from uint8 to double:
+    images = np.multiply(images,1.0/255.0)
+    # Convert the labels to one hot encoding:
+    labels_vector = np.copy(labels)
+    labels = flat_to_one_hot(labels)
+    # Split the data into validation and training data:
+    validation_images = images[:validation_size]
+    validation_labels = labels[:validation_size]
+    validation_labels_vector = labels_vector[:validation_size]
+    train_images = images[validation_size:]
+    train_labels = labels[validation_size:]
+    train_labels_vector = labels_vector[validation_size:]
+    # Convert the images from flat to matrix form:
+    train_images = train_images.reshape(train_images.shape[0],1,28,28)
+    validation_images = validation_images.reshape(validation_images.shape[0],1,28,28)
+    #Combine into lists 
+    images = [train_images, validation_images]
+    labels = [train_labels, validation_labels]
+    labels_vector = [train_labels_vector, validation_labels_vector]
+    	# Return the data:
+    return images,labels,labels_vector
 #%%
 
 
