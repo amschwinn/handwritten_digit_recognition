@@ -17,14 +17,16 @@ Handwritten Digit Classification
 Austin Schwinn, Joe Renner, Dimitris Tsolakidis
 November 24, 2017
 """
-
+''''
 #Set working directory
 import os
 os.chdir('C:\Users\schwi\Google Drive\MLDM\Machine Learning Project\github')
 #os.path.dirname(os.path.abspath(__file__))
 os.getcwd()
+'''
 
 #Load prebuilt packages
+import pandas as pd
 import numpy as np
 from metric_learn import LMNN
 from sklearn.cluster import KMeans
@@ -33,15 +35,19 @@ from sklearn.cluster import KMeans
 import freeman_code as fc
 import knn
 import load_mnist as lm
+import smtplib
 
 #Load mnist dataset
-images,labels,labels_vector = lm.load('Data/train.csv',2000)
+#images,labels,labels_vector = lm.load('Data/train.csv',2000)
+images,labels,labels_vector = lm.load('train.csv',2000)
 
 #Separate training and validation sets
 train_images = images[0]
 train_labels_vect = labels_vector[0]
 val_images = images[1]
 val_labels_vect = labels_vector[1]
+
+print('load complete')
 
 #Preprocess and convert into binary images
 for i in range(len(train_images)):
@@ -50,14 +56,23 @@ for i in range(len(train_images)):
     train_images[i, 0] = lm.img_preprocess(train_image)
     #plt.imshow(binary_image, cmap = plt.cm.gray)
 
+print('preprocess complete')
+
 #Get freeman codes for images
 freeman_train = []
 for i in range(len(train_images)):
     print(i)
     freeman_train = freeman_train + [fc.freeman_code(train_images[i,0,:,:])]
 
+print('freeman encoding complete')
+
 #Calculate edit distances
 train_dist = knn.precompute_distances(freeman_train, True)
+
+train_dist_df = pd.DataFrame(train_dist)
+train_dist_df.to_csv('train_dist_results.csv')
+
+print('edit distance complete')
 
 #%%
 #Impliment LMNN with edit distance
@@ -66,5 +81,22 @@ lmnn = LMNN(k=10, learn_rate=1e-6).fit(train_dist, train_labels_vect)
 #Transform into new feature space
 train_dist_metric = lmnn.transform(train_dist)
 
+print('lmnn complete')
+
 #Run KMeans on LMNN transformed features
 kmeans = KMeans(n_clusters=10).fit(train_dist_metric)
+
+print('kmeans complete')
+
+#%%
+###############################################################################
+# Other
+###############################################################################
+#Send email notification when test is complete
+server = smtplib.SMTP('smtp.gmail.com', 587)
+server.connect("smtp.gmail.com",587)
+server.ehlo()
+server.starttls()
+server.login("schwinnteriscoming@gmail.com", "@lp4aCat")
+msg = 'Subject: LMNN Test Complete'
+server.sendmail("schwinnteriscoming@gmail.com", "schwinnam@gmail.com", msg)
