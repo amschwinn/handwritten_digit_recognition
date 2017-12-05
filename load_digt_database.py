@@ -21,7 +21,7 @@ from sqlalchemy import create_engine
 #%%
 def load_user_examples():
     #Connect to mysql db
-    engine = create_engine("mysql://mldm_gangster:$aint3tienne@ml-digit-project.cnpjv4qug6jj.us-east-2.rds.amazonaws.com/digits")
+    engine = create_engine("mysql://mldm_gangster:$aint3tienne@ml-digit-recognition.cnpjv4qug6jj.us-east-2.rds.amazonaws.com/digits")
     #load the table into a data frame
     digits = pd.read_sql_table("user_digits",engine)
     
