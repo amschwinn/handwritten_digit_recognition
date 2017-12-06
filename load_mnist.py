@@ -3,7 +3,7 @@ import pandas as pd
 #import os
 from matplotlib import pyplot as plt
 #import cv2
-from skimage.filters import threshold_otsu
+from skimage.filters import threshold_otsu, gaussian
 #from PIL import Image
 #from pylab import contour
 from skimage.filters import roberts, sobel, scharr, prewitt
