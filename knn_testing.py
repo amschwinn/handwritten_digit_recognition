@@ -75,18 +75,48 @@ for i in range(len(train_images)):
 
 print('freeman encoding complete')
 
+
 #%%
 #Take subset of freeman codes
 freeman_train = []
 freeman_labels = []
 freeman_index = []
 
-for i in sorted(random.sample(xrange(len(freeman_list)),500)):
+for i in sorted(random.sample(xrange(len(freeman_list)),1000)):
     freeman_train = freeman_train + [freeman_list[i]]
     freeman_labels = freeman_labels + [train_labels_vect[i]]
     freeman_index = freeman_index + [i]
+#%%
+#Save for later
+pickle.dump(freeman_train, open('freeman_train.sav', 'wb'))
+pickle.dump(freeman_labels, open('freeman_labels.sav', 'wb'))
 
-    
+#%%
+#Load saved dataset
+freeman_train = pickle.load(open('freeman_train.sav','rb'))
+freeman_labels = pickle.load(open('freeman_labels.sav','rb'))
+
+#%%
+#Take even smaller subset
+freeman_train = freeman_train[0:500]
+freeman_labels = freeman_labels[0:500]
+
+#%%
+#Remove examples outside of bayseian error
+freeman_train, freeman_labels = knn.remove_outliers_bayesian_error(freeman_train,
+                                                                   freeman_labels)
+#Remove irrelevant examples
+freeman_train, freeman_labels = knn.remove_irrelevant(freeman_train,freeman_labels)
+#%%
+'''
+from random import shuffle
+check2=zip(freeman_train,freeman_labels)
+check=zip(freeman_train,freeman_labels)
+shuffle(check2)
+print(check[0])
+print(check2[0])
+print(check==check2)
+'''
 #%%
 #get freeman_histograms
 freeman_hist = np.array(np.repeat(0,8),dtype='float64').reshape((1,8))
@@ -128,14 +158,15 @@ edit_dist_pca = pca.transform(edit_dist)
 #Split train and test
 dist_train,dist_val,label_train,label_val,free_train,free_val=train_test_split(
                         edit_dist,edit_labels,freeman_train,train_size=.9)
+#%%
 hist_train,hist_val,label_train,label_val,free_train,free_val=train_test_split(
                         freeman_hist,hist_labels,freeman_train,train_size=.9)
 
 
 #%%
 #test 1 knn iteration
-test = free_val[0]
-test_label = label_val[0]
+test = free_train[0]
+test_label = label_train[0]
 print(test_label)
 start = timeit.default_timer()
 test_pred = knn.knn(test, free_train, label_train, 1)
@@ -152,7 +183,7 @@ for i in free_val:
     pred_label = pred_label + [pred]
 end = timeit.default_timer()
 print(end-start)
-
+#%%
 pred_label = np.array(pred_label)
 knn_acc = accuracy_score(label_val,pred_label)
 print(knn_acc)
@@ -164,4 +195,10 @@ start = timeit.default_timer()
 knn.knn_efficient(test,free_train,label_train,1,dist_train)
 end = timeit.default_timer()
 print(end-start)
+
+#%%
+#Verify edit distance
+#Should be edit idst of 5
+knn.edit_distance(['i','n','t','e','n','t','i','o','n'],
+                  ['e','x','e','c','u','t','i','o','n'])
 
