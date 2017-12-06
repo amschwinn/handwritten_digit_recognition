@@ -60,7 +60,8 @@ def img_preprocess3(img):
     #img_binary = ndimage.binary_fill_holes(img_binary).astype(bool)
     
     img_dilated = dilation(img_binary, disk(1))
-    img_new = img_dilated - img_binary
+    #img_new = img_dilated - img_binary
+    img_new = np.bitwise_xor(img_dilated, img_binary)
         
     return img_new
 
