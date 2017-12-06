@@ -18,21 +18,32 @@ from skimage.filters.rank import median
 
 
 def img_preprocess(img):
-    
-    img_medfilt = median(img)
-    thresh = threshold_otsu(img_medfilt)
-    img_binary = img_medfilt > thresh
+    img_blur = gaussian(img, sigma=1)
+    #thresh = threshold_otsu(img_medfilt)
+    thresh = threshold_otsu(img_blur)
+    #img_binary = img_medfilt > thresh
+    img_binary = img_blur > thresh
     img_fill_holes = ndimage.binary_fill_holes(img_binary).astype(bool)
     
     img_edge = sobel(img_fill_holes)    
     thresh_edge = threshold_otsu(img_edge)
     
     binary_image = img_edge > thresh_edge
-    img_fill_holes = ndimage.binary_fill_holes(binary_image).astype(bool)
     
-    binary_image = sobel(img_fill_holes)
-    thresh_edge = threshold_otsu(binary_image)
-    binary_image = binary_image > thresh_edge
+    #img_medfilt = median(img)
+    #thresh = threshold_otsu(img_medfilt)
+    #img_binary = img_medfilt > thresh
+    #img_fill_holes = ndimage.binary_fill_holes(img_binary).astype(bool)
+    
+    #img_edge = sobel(img_fill_holes)    
+    #thresh_edge = threshold_otsu(img_edge)
+    
+    #binary_image = img_edge > thresh_edge
+    #img_fill_holes = ndimage.binary_fill_holes(binary_image).astype(bool)
+    
+    #binary_image = sobel(img_fill_holes)
+    #thresh_edge = threshold_otsu(binary_image)
+    #binary_image = binary_image > thresh_edge
     
     #img_fill_holes = ndimage.binary_fill_holes(img_binary).astype(bool)
     #img_edge = sobel(img_fill_holes)
