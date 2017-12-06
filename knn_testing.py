@@ -81,11 +81,12 @@ freeman_train = []
 freeman_labels = []
 freeman_index = []
 
-for i in sorted(random.sample(xrange(len(freeman_list)),1000)):
+for i in sorted(random.sample(xrange(len(freeman_list)),500)):
     freeman_train = freeman_train + [freeman_list[i]]
     freeman_labels = freeman_labels + [train_labels_vect[i]]
     freeman_index = freeman_index + [i]
 
+    
 #%%
 #get freeman_histograms
 freeman_hist = np.array(np.repeat(0,8),dtype='float64').reshape((1,8))
@@ -102,6 +103,7 @@ hist_labels = np.array(freeman_labels)
 
 
 #%%
+
 #Calculate edit distances
 start = timeit.default_timer()
 edit_dist = knn.precompute_distances(freeman_train, True)
@@ -116,70 +118,50 @@ print(end-start)
 print('edit distance complete')
 
 #%%
+'''
 #Run PCA on edit distances
 pca = PCA(n_components=200).fit(edit_dist)
 print(pca.explained_variance_ratio_.sum())
 edit_dist_pca = pca.transform(edit_dist)
-
+'''
 #%%
 #Split train and test
-dist_train, dist_val, label_train, label_val = train_test_split(edit_dist_pca,
-                                                    edit_labels,train_size=.9)
-hist_train, hist_val, label_train, label_val = train_test_split(freeman_hist,
-                                                    hist_labels,train_size=.9)
+dist_train,dist_val,label_train,label_val,free_train,free_val=train_test_split(
+                        edit_dist,edit_labels,freeman_train,train_size=.9)
+hist_train,hist_val,label_train,label_val,free_train,free_val=train_test_split(
+                        freeman_hist,hist_labels,freeman_train,train_size=.9)
 
-#Impliment LMNN with edit distance
+
+#%%
+#test 1 knn iteration
+test = free_val[0]
+test_label = label_val[0]
+print(test_label)
 start = timeit.default_timer()
-lmnn_dist = LMNN(k=3, learn_rate=1e-6).fit(dist_train, label_train)
-lmnn_hist = LMNN(k=3, learn_rate=1e-6).fit(hist_train, label_train)
-
-#Transform into new feature space
-dist_train_metric = lmnn_dist.transform(dist_train)
-dist_val_metric = lmnn_dist.transform(dist_val)
-hist_train_metric = lmnn_hist.transform(hist_train)
-hist_val_metric = lmnn_hist.transform(hist_val)
-
-
-end = timeit.default_timer()
-print(end-start)
-print('lmnn complete')
-
-#Run KNN on LMNN transformed features
-start = timeit.default_timer()
-
-KNN_dist = KNeighborsClassifier(n_neighbors=1).fit(dist_train_metric, label_train)
-dist_predict = KNN_dist.predict(dist_val_metric)
-lmnn_hist_acc = accuracy_score(label_val,dist_predict)
-
-KNN_hist = KNeighborsClassifier(n_neighbors=1).fit(hist_train_metric, label_train)
-hist_predict = KNN_hist.predict(hist_val_metric)
-lmnn_hist_acc = accuracy_score(label_val,hist_predict)
-
+test_pred = knn.knn(test, free_train, label_train, 1)
+print(test_pred)
 end = timeit.default_timer()
 print(end-start)
 
 #%%
-#Save models
-filename = 'lmnn_dist.sav'
-pickle.dump(lmnn_dist, open(filename, 'wb'))
-filename = 'KNN_dist.sav'
-pickle.dump(KNN_dist, open(filename, 'wb'))
-filename = 'lmnn_hist.sav'
-pickle.dump(lmnn_hist, open(filename, 'wb'))
-filename = 'KNN_hist.sav'
-pickle.dump(KNN_hist, open(filename, 'wb'))
+#Test full iteration
+pred_label = []
+start = timeit.default_timer()
+for i in free_val:
+    pred = knn.knn(i, free_train, label_train, 1)
+    pred_label = pred_label + [pred]
+end = timeit.default_timer()
+print(end-start)
+
+pred_label = np.array(pred_label)
+knn_acc = accuracy_score(label_val,pred_label)
+print(knn_acc)
 
 #%%
-###############################################################################
-# Other
-###############################################################################
-'''
-#Send email notification when test is complete
-server = smtplib.SMTP('smtp.gmail.com', 587)
-server.connect("smtp.gmail.com",587)
-server.ehlo()
-server.starttls()
-server.login("schwinnteriscoming@gmail.com", "@lp4aCat")
-msg = 'Subject: LMNN Test Complete'
-server.sendmail("schwinnteriscoming@gmail.com", "schwinnam@gmail.com", msg)
-'''
+#Test efficient KNN
+test = dist_val[0]
+start = timeit.default_timer()
+knn.knn_efficient(test,free_train,label_train,1,dist_train)
+end = timeit.default_timer()
+print(end-start)
+
