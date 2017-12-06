@@ -149,6 +149,7 @@ def remove_outliers_bayesian_error(X, labels):
 # input: features, labels of full dataset
 # output: features, labels of cleaned dataset
 def remove_irrelevant(X, labels):
+    n = len(labels)
     # randomly select example to start in storage
     start_index = randrange(0,len(labels))
     storageX = [X[start_index]]
@@ -159,10 +160,12 @@ def remove_irrelevant(X, labels):
     prev_storage_size = 0
     while(not storage_size == prev_storage_size):
         prev_storage_size = storage_size
-        for features, label in zip(X,labels):
-            if not knn(features, storageX, storageY, k=1) == label:
-                storageX.append(features)
-                storageY.append(label)
+        for i in range(n-storage_size-1,-1,-1):  # traverse in reverse so deleting doesn't mess up indices
+            if not knn(X[i], storageX, storageY, k=1) == labels[i]:
+                storageX.append(X[i])
+                storageY.append(labels[i])
+                del X[i]
+                del labels[i]
         storage_size = len(storageY)
     return storageX, storageY
 

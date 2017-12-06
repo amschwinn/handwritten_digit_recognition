@@ -93,8 +93,8 @@ pickle.dump(freeman_labels, open('freeman_labels.sav', 'wb'))
 
 #%%
 #Load saved dataset
-freeman_train = pickle.load(open('freeman_train.sav','rb'))
-freeman_labels = pickle.load(open('freeman_labels.sav','rb'))
+freeman_train = pickle.load(open('freeman_train.sav','r'))
+freeman_labels = pickle.load(open('freeman_labels.sav','r'))
 
 #%%
 #Take even smaller subset
@@ -104,11 +104,12 @@ freeman_labels = freeman_labels[0:100]
 #%%
 #Remove examples outside of bayseian error
 print "starting bayesian"
-freeman_train, freeman_labels = knn.remove_outliers_bayesian_error(freeman_train,
-                                                                   freeman_labels)
-exit(0)
+freeman_train, freeman_labels = knn.remove_outliers_bayesian_error(freeman_train,freeman_labels)
+
 #Remove irrelevant examples
+print "removing irrelevant examples"
 freeman_train, freeman_labels = knn.remove_irrelevant(freeman_train,freeman_labels)
+exit(0)
 #%%
 '''
 from random import shuffle
