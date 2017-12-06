@@ -119,9 +119,9 @@ def remove_outliers_bayesian_error(X, labels):
     shuffle(shuffled_dataset)
     X, labels = zip(*shuffled_dataset)
     X1 = list(X[0:int(floor(n/2))])
-    X2 = list(X[int(floor(n/2))+1:n])
+    X2 = list(X[int(floor(n/2)):n])
     labels1 = list(labels[0:int(floor(n/2))])
-    labels2 = list(labels[int(floor(n/2)) + 1:n])
+    labels2 = list(labels[int(floor(n/2)):n])
     S1_size = len(labels1)
     S2_size = len(labels2)
     prev_S1_size = 0
@@ -133,9 +133,6 @@ def remove_outliers_bayesian_error(X, labels):
         for i in range((S1_size-1),-1,-1):# have to go in reverse order to not throw off indices when deleting missclassified
             pred_class = knn(X1[i],X2,labels2,k=1)
             if not pred_class == labels1[i]:
-                print(pred_class)
-                print(labels1[i])
-                print(X1[i])
                 del labels1[i]
                 del X1[i]
         # classify S2 with S1 and remove misclassified
@@ -146,7 +143,7 @@ def remove_outliers_bayesian_error(X, labels):
                 del X2[i]
         S1_size = len(labels1)
         S2_size = len(labels2)
-    return X1.extend(X2), labels1.extend(labels2)
+    return X1 + X2, labels1 + labels2
 
 # function that removes irrelevant examples from dataset
 # input: features, labels of full dataset

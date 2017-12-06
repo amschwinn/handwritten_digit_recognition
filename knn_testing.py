@@ -19,10 +19,10 @@ November 24, 2017
 '''
 
 #Set working directory
-import os
-os.chdir('D:/GD/MLDM/Machine Learning Project/github')
+#import os
+#os.chdir('D:/GD/MLDM/Machine Learning Project/github')
 #os.path.dirname(os.path.abspath(__file__))
-os.getcwd()
+#os.getcwd()
 
 
 #Load prebuilt packages
@@ -38,7 +38,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.decomposition import PCA
 
-#Load our implimentations
+#Load our implementations
 import freeman_code as fc
 import knn
 import load_mnist as lm
@@ -98,13 +98,15 @@ freeman_labels = pickle.load(open('freeman_labels.sav','rb'))
 
 #%%
 #Take even smaller subset
-freeman_train = freeman_train[0:500]
-freeman_labels = freeman_labels[0:500]
+freeman_train = freeman_train[0:100]
+freeman_labels = freeman_labels[0:100]
 
 #%%
 #Remove examples outside of bayseian error
+print "starting bayesian"
 freeman_train, freeman_labels = knn.remove_outliers_bayesian_error(freeman_train,
                                                                    freeman_labels)
+exit(0)
 #Remove irrelevant examples
 freeman_train, freeman_labels = knn.remove_irrelevant(freeman_train,freeman_labels)
 #%%

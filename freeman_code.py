@@ -81,10 +81,3 @@ def next_direction(img, current_row, current_col, rows, cols, last_row, last_col
     return 8, -1, -1
 
 
-test_image0 =  [[0,0,1,0,0],
-                [0,1,0,1,0],
-                [1,0,0,0,1],
-                [0,1,0,1,0],
-                [0,0,1,0,0]]
-
-print freeman_code(test_image0)
