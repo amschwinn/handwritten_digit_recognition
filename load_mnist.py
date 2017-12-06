@@ -57,7 +57,7 @@ def img_preprocess3(img):
     thresh = threshold_otsu(img)
     
     img_binary = img > thresh
-    #img_binary = ndimage.binary_fill_holes(img_binary).astype(bool)
+    img_binary = ndimage.binary_fill_holes(img_binary).astype(bool)
     
     img_dilated = dilation(img_binary, disk(1))
     #img_new = img_dilated - img_binary
