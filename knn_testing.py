@@ -19,8 +19,8 @@ November 24, 2017
 '''
 
 #Set working directory
-#import os
-#os.chdir('D:/GD/MLDM/Machine Learning Project/github')
+import os
+os.chdir('D:/GD/MLDM/Machine Learning Project/github')
 #os.path.dirname(os.path.abspath(__file__))
 #os.getcwd()
 
@@ -57,12 +57,12 @@ val_images = images[1]
 val_labels_vect = labels_vector[1]
 
 print('load complete')
-
+#%%
 #Preprocess and convert into binary images
 for i in range(len(train_images)):
     print(i)
     train_image = train_images[i, 0]
-    train_images[i, 0] = lm.img_preprocess(train_image)
+    train_images[i, 0] = lm.img_preprocess3(train_image)
     #plt.imshow(binary_image, cmap = plt.cm.gray)
 
 print('preprocess complete')
@@ -87,29 +87,58 @@ for i in sorted(random.sample(xrange(len(freeman_list)),1000)):
     freeman_labels = freeman_labels + [train_labels_vect[i]]
     freeman_index = freeman_index + [i]
 #%%
+'''
 #Save for later
 pickle.dump(freeman_train, open('freeman_train.sav', 'wb'))
 pickle.dump(freeman_labels, open('freeman_labels.sav', 'wb'))
-
+'''
 #%%
+'''
 #Load saved dataset
 freeman_train = pickle.load(open('freeman_train.sav','r'))
 freeman_labels = pickle.load(open('freeman_labels.sav','r'))
-
+'''
 #%%
 #Take even smaller subset
-freeman_train = freeman_train[0:100]
-freeman_labels = freeman_labels[0:100]
+#freeman_train = freeman_train[0:100]
+#freeman_labels = freeman_labels[0:100]
 
 #%%
 #Remove examples outside of bayseian error
-print "starting bayesian"
+print "removing outside bayesian eror"
+start = timeit.default_timer()
 freeman_train, freeman_labels = knn.remove_outliers_bayesian_error(freeman_train,freeman_labels)
+end = timeit.default_timer()
+print(end-start)
 
+#%%
 #Remove irrelevant examples
 print "removing irrelevant examples"
+start = timeit.default_timer()
 freeman_train, freeman_labels = knn.remove_irrelevant(freeman_train,freeman_labels)
-exit(0)
+end = timeit.default_timer()
+print(end-start)
+
+#%%
+#Save for later
+pickle.dump(freeman_train, open('processed_data/freeman_train.sav', 'wb'))
+pickle.dump(freeman_labels, open('processed_data/freeman_labels.sav', 'wb'))
+
+#%%
+#Load saved dataset
+#For preprocess 1
+freeman_train = pickle.load(open('processed_data/freeman_train.sav','r'))
+freeman_labels = pickle.load(open('processed_data/freeman_labels.sav','r'))
+
+#For preprocess2
+freeman_train2 = pickle.load(open('processed_data/freeman_train2.sav','r'))
+freeman_labels2 = pickle.load(open('processed_data/freeman_labels2.sav','r'))
+
+#For preprocess3
+freeman_train3 = pickle.load(open('processed_data/freeman_train3.sav','r'))
+freeman_labels3 = pickle.load(open('processed_data/freeman_labels3.sav','r'))
+
+###############################################################################
 #%%
 '''
 from random import shuffle
