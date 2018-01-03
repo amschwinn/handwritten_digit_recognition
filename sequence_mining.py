@@ -1,6 +1,9 @@
 from knn import edit_distance
 from math import floor, ceil
 from itertools import permutations, chain
+from pymining import seqmining
+
+
 
 # function to find distance between closest subsequence of a freeman code to candidate
 # input: freeman code, candidate sequence
@@ -41,7 +44,7 @@ def find_closest_sequence(code, candidate):
             break
         prev_dist = dist
     return min_dist, code[start_index:stop_index]
-   
+
 # function to find frequent sequences from candidates
 # input: freeman codes, candidates (all of length K), distance
 # distance: how far from sequence is accepted as support
@@ -58,17 +61,17 @@ def find_frequent(codes, candidates, distance, min_sup_threshold):
         if (float(support) / float(dbsize)) >= min_sup_threshold:
             freq_cands.append(candidate)
     return freq_cands
-                
+
 def generate_new(cands, k):
     if k == 2:
         candidates = list(permutations(cands,2)) + [(x,x) for x in cands]
     else:
         candidates = set(permutations(chain(*cands),k))
     return candidates
-        
-    
+
+
 # sequence mining algorithm: Generalized Sequential Pattern Mining
-# input: freeman codes from one class (digit), 
+# input: freeman codes from one class (digit),
 # support threshold to determine frequency: 0 < freq < 1
 # output: frequent sequences representative of a class
 def modified_GSP(codes, support_threshold):
@@ -82,19 +85,12 @@ def modified_GSP(codes, support_threshold):
         candidates = find_frequent(codes, candidates, distance=ceil(float(k)/4.0), min_sup_threshold=0.5)
         k += 1
     return prev_candidates
-    
-    
-
-
-candidate = list(permutations([0,1,2,3,4,5,6,7],2))
-code = [[1,2,3,4,5,6,7,8,9],[7,6,5,4,3,2,1]]
-#candidate = [[3,4,6,6,7,8],[1,2,3,9,7,7]]
-
-print modified_GSP(code, 0.5)
-                
 
 
         
+codes = ('146372192346464378', '864748586970878437251433152784', '1111182829393844747383')
+freq_seqs = seqmining.freq_seq_enum(codes, 2)
+print sorted(freq_seqs)
 
     
     
