@@ -10,13 +10,28 @@ import numpy as np
  
  
 def trace_boundary(image, XStart=None, YStart=None,
-                MaxLength=np.inf):
+                MaxLength=np.inf,threshold=.2):
     
- 
     # check type of input image
     if image.dtype != np.dtype('bool'):
-        raise TypeError("Input 'Image' must be a bool")
- 
+        for i in range(image.shape[0]):
+            for j in range(image.shape[1]):
+                if image[i,j] <= threshold:
+                    image[i,j] = False
+                else:
+                    image[i,j] = True
+        #ensure the edges are still padded
+        if np.sum(image[27,:]) != 0:
+            image[27,:] = 0
+        elif np.sum(image[:,27]) != 0:
+            image[:,27] = 0
+        elif np.sum(image[:,0]) != 0:
+            image[:,0] = 0
+        elif np.sum(image[0,:]) != 0:
+            image[0,:] = 0
+                    
+        image = image.astype('bool')
+
     # scan for starting pixel if none provided
     if XStart is None and YStart is None:
         Indices = np.nonzero(image)
@@ -27,10 +42,15 @@ def trace_boundary(image, XStart=None, YStart=None,
             X = []
             Y = []
             return X, Y
- 
+    
         
     X, Y = moore_neighbor(image, XStart, YStart, MaxLength)
-    
+
+    image[:,:] = 0
+    image[Y,X] = 1
+    image = image.astype('bool')
+
+    return image  
  
  
 def moore_neighbor(image, XStart, YStart, MaxLength):
