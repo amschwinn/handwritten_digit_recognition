@@ -92,7 +92,27 @@ def merge_clusters(seqs, sups, cluster_labels, dists, num_seq_digit):
         cluster_sup.append(round(mean([sups[x] for x in cands]) / float(num_seq_digit), 2))
     return cluster_seq, cluster_sup
 
+
+def get_freq_sequences(digit):
+    if type(digit) == int:
+        digit = str(digit)
+    f = open('freq_seqs.txt', 'r')
+    seq = []
+    sup = []
+    for line in f:
+        tokens = line.split()
+        if tokens[0] == digit:
+            n = len(tokens)
+            for i in range(1,n-3,2):
+                seq.append([int(x) for x in tokens[i]])
+                sup.append(float(tokens[i+1]))
+            return seq, sup
+
+
 if __name__ == "__main__":
+
+    print get_freq_sequences(4)
+    exit(0)
     freeman_train = pickle.load(open('processed_data/freeman_train3.sav','r'))
     freeman_labels = pickle.load(open('processed_data/freeman_labels3.sav','r'))
 
