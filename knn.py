@@ -42,7 +42,7 @@ def direction_cost(x,y):
 def euclidean_distance(im1, im2):
     total = 0
     for i in xrange(8):
-        total += (im1[i] - im2[i]) ^ 2
+        total += ((im1[i] - im2[i]) * (im1[i] - im2[i]))
     return sqrt(total)
 
 # k-nearest Neighbors
