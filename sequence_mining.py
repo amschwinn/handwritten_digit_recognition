@@ -3,7 +3,7 @@ from knn import edit_distance
 from sklearn.cluster import DBSCAN
 from numpy import zeros
 import pickle
-from numpy import mean
+from numpy import mean, floor, array
 
 # Returns true if seq1 is a subsequence of seq2
 # m is length of str1, n is length of str2
@@ -92,11 +92,30 @@ def merge_clusters(seqs, sups, cluster_labels, dists, num_seq_digit):
         cluster_sup.append(round(mean([sups[x] for x in cands]) / float(num_seq_digit), 2))
     return cluster_seq, cluster_sup
 
+# finds the substring of a sequence that is closest to the subsequence
+# input: sequence, subsequence
+# output: starting index of substring, substring, edit distance from substring to subsequence
+def find_match(seq, subsequence):
+    n = len(seq)
+    m = len(subsequence)
+    if n <= m:
+        return 0, seq, edit_distance(seq, subsequence)
+    best_i = -1
+    best_dist = -1
+    for i in range(0,n-m):
+        dist = edit_distance(seq[i:i+m],subsequence)
+        if best_dist == -1 or best_dist > dist:
+            best_dist = dist
+            best_i = i
+    return best_i, seq[best_i:best_i+m], best_dist
 
+# loads frequent sequences for specific digit from text file, returns sequences and supports
+# input: digit
+# output: frequent sequences, supports
 def get_freq_sequences(digit):
     if type(digit) == int:
         digit = str(digit)
-    f = open('freq_seqs.txt', 'r')
+    f = open('freq_seqs/freq_seqs.txt', 'r')
     seq = []
     sup = []
     for line in f:
@@ -108,11 +127,86 @@ def get_freq_sequences(digit):
                 sup.append(float(tokens[i+1]))
             return seq, sup
 
+# computes new bounding box of subsequence
+# input: coordinates for: low row, high row, left column, right column, i (current row) and j (current column
+# output: new bounding box (adjusted if current row and column are outside box)
+def update_box(lr, hr, lc, rc, i, j):
+    if i > lr:
+        lr = i
+    elif i < hr:
+        hr = i
+    if j > rc:
+        rc = j
+    elif j < lc:
+        lc = j
+    return lr, hr, lc, rc
+
+# draws subsequence on binary grid, returns centered grid
+# input: subsequence
+# output: grid of 0s and 1s showing centered sequence
+def subseq_to_grid(code):
+    grid = [[0 for i in range(28)] for j in range(28)] # initialize grid
+    i = 13      # current row of grid
+    j = 13      # current column of grid
+    grid[i][j] = 1
+    # bounding box (low row, high row, left col, right col) used for centering at end
+    lr = i
+    hr = i
+    lc = j
+    rc = j
+    for dir in code:
+        if dir == 0 or dir == 1 or dir == 7:
+            i -= 1
+        if dir <= 3 and dir >= 1:
+            j += 1
+        if dir >= 3 and dir <= 5:
+            i += 1
+        if dir >= 5:
+            j -= 1
+        grid[i][j] = 1
+        lr, hr, lc, rc = update_box(lr, hr, lc, rc, i, j)
+    # compute center of bounding box
+    x = int(floor(float(lr + hr)/2.0))
+    y = int(floor(float(lc + rc)/2.0))
+    # compute translation parameters
+    row_trans = x - 13
+    col_trans = y - 13
+    # move grid according to translation parameters in order to center the subsequence in the grid
+    if row_trans != 0:
+        if row_trans > 0:
+            del grid[0:row_trans]
+            for x in range(row_trans):
+                grid.append([0 for z in range(28)])
+        else:
+            del grid[28 + row_trans:28]
+            for x in range(-row_trans):
+                grid.insert(0, [0 for z in range(28)])
+    if col_trans != 0:
+        if col_trans > 0:
+            for x in range(28):
+                del grid[x][0:col_trans]
+            for x in range(28):
+                grid[x].extend([0 for x in range(col_trans)])
+        else:
+            for x in range(28):
+                del grid[x][28 + col_trans:28]
+            for x in range(28):
+                for y in range(-col_trans):
+                    grid[x].insert(0, 0)
+    return array(grid)
+
+
 
 if __name__ == "__main__":
+    digit = '9'
+    seqs, sups = get_freq_sequences(digit)
+    grid = subseq_to_grid(seqs[0])
 
-    print get_freq_sequences(4)
+    import matplotlib.image as mpimg
+
+    mpimg.imsave('freq_seqs/' + digit + '.png', grid * 255, cmap = 'gray')
     exit(0)
+
     freeman_train = pickle.load(open('processed_data/freeman_train3.sav','r'))
     freeman_labels = pickle.load(open('processed_data/freeman_labels3.sav','r'))
 
@@ -136,7 +230,7 @@ if __name__ == "__main__":
     seq_sup.sort(key=lambda x: x[1])
     seqs, sup = zip(*seq_sup)
     dists = pairwise_dists(seqs)
-    clusterer = DBSCAN(eps=cluster_max_dist,min_samples=2, metric='precomputed')
+    clusterer = DBSCAN(eps=cluster_max_dist,min_samples=2,metric='precomputed')
     clusterer.fit(dists)
     final_seqs, final_sups = merge_clusters(seqs,sup,clusterer.labels_,dists,num_total_seq)
     print final_seqs
