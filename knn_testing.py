@@ -89,6 +89,7 @@ def preprocess_convert(train_images):
 #train_images = train_images[:20000,:,:,:]
 #val_images = val_images[:1500,:,:,:]
 
+
 train_images = preprocess_convert(train_images)
 val_images = preprocess_convert(val_images)
 
@@ -119,12 +120,10 @@ for i in sorted(random.sample(xrange(len(freeman_list)),2000)):
     freeman_train = freeman_train + [freeman_list[i]]
     freeman_labels = freeman_labels + [train_labels_vect[i]]
     freeman_index = freeman_index + [i]
-#%%
-'''
 #Save for later
-pickle.dump(freeman_train, open('freeman_train.sav', 'wb'))
-pickle.dump(freeman_labels, open('freeman_labels.sav', 'wb'))
-'''
+pickle.dump(freeman_train, open('freeman_train4.sav', 'wb'))
+pickle.dump(freeman_labels, open('freeman_labels4.sav', 'wb'))
+
 #%%
 '''
 #Load saved dataset
@@ -146,6 +145,10 @@ freeman_train, freeman_labels = knn.remove_outliers_bayesian_error(freeman_train
 end = timeit.default_timer()
 print(end-start)
 
+#Save for later
+pickle.dump(freeman_train, open('freeman_train_bay4.sav', 'wb'))
+pickle.dump(freeman_labels, open('freeman_labels_bay4.sav', 'wb'))
+
 #%%
 #Remove irrelevant examples
 print "removing irrelevant examples"
@@ -154,10 +157,13 @@ freeman_train, freeman_labels = knn.remove_irrelevant(freeman_train,freeman_labe
 end = timeit.default_timer()
 print(end-start)
 
+pickle.dump(freeman_train, open('freeman_train_irr4.sav', 'wb'))
+pickle.dump(freeman_labels, open('freeman_labels_irr4.sav', 'wb'))
+
 #%%
 #Save for later
-pickle.dump(freeman_train, open('processed_data/freeman_train4.sav', 'wb'))
-pickle.dump(freeman_labels, open('processed_data/freeman_labels4.sav', 'wb'))
+pickle.dump(freeman_train, open('processed_data/freeman_train4_bigger.sav', 'wb'))
+pickle.dump(freeman_labels, open('processed_data/freeman_labels4_bigger.sav', 'wb'))
 #%%
 '''
 #Enocde in string for easy access in Exaptive
@@ -170,8 +176,8 @@ pickle_file.write(pickled)
 #%%
 #Load saved dataset
 #For preprocess 1
-freeman_train = pickle.load(open('processed_data/freeman_train3_2k.sav','r'))
-freeman_labels = pickle.load(open('processed_data/freeman_labels3_2k.sav','r'))
+freeman_train = pickle.load(open('processed_data/freeman_train4_bigger.sav','r'))
+freeman_labels = pickle.load(open('processed_data/freeman_labels4_bigger.sav','r'))
 
 '''
 #From serialized string
@@ -192,6 +198,8 @@ for i in freeman_train:
 
 freeman_hist = freeman_hist[1:,:]
 hist_labels = np.array(freeman_labels)
+
+
 
 
 #%%
@@ -244,6 +252,7 @@ print(end-start)
 #%%
 #Test full iteration
 pred_label = []
+print('knn')
 start = timeit.default_timer()
 for i in freeman_val:
     pred = knn.knn(i, freeman_train, freeman_labels, 1)

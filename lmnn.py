@@ -57,7 +57,8 @@ val_images = images[1]
 val_labels_vect = labels_vector[1]
 
 print('load complete')
-
+#%%
+'''
 #Preprocess and convert into binary images
 for i in range(len(train_images)):
     print(i)
@@ -75,7 +76,7 @@ for i in range(len(train_images)):
 
 print('freeman encoding complete')
 
-#%%
+
 #Take subset of freeman codes
 freeman_train = []
 freeman_labels = []
@@ -85,21 +86,46 @@ for i in sorted(random.sample(xrange(len(freeman_list)),1000)):
     freeman_train = freeman_train + [freeman_list[i]]
     freeman_labels = freeman_labels + [train_labels_vect[i]]
     freeman_index = freeman_index + [i]
+'''
+#%%
+#Load saved dataset
+#Load saved dataset
+#For preprocess 1
+freeman_train = pickle.load(open('processed_data/freeman_train3_biggerSubset.sav','r'))
+freeman_labels = pickle.load(open('processed_data/freeman_labels3_biggerSubset.sav','r'))
 
 #%%
-#get freeman_histograms
-freeman_hist = np.array(np.repeat(0,8),dtype='float64').reshape((1,8))
-
-for i in freeman_train:
+#Calculate frequency of each direction in a freeman code
+#Input: freeman code
+#Output: count for each direction
+def freeman_freq_hist(X):
     amount = np.array(np.repeat(0,8),dtype='float64').reshape((1,8))
-    code, counts = np.unique(i, return_counts=True)
+    code, counts = np.unique(X, return_counts=True)
+    
     for j in range(len(code)):
         amount[0,code[j]] = counts[j]
-    freeman_hist = np.vstack((freeman_hist,amount))
+    
+    return amount
 
-freeman_hist = freeman_hist[1:,:]
-hist_labels = np.array(freeman_labels)
+#get freeman histograms for training set
+freeman_hist = []
+for i in freeman_train:
+    amount = freeman_freq_hist(i)
+    freeman_hist = freeman_hist + amount.tolist()
 
+
+#%%
+#Calculate frequency of each direction in a freeman code
+#Input: freeman code
+#Output: count for each direction
+def freeman_freq_hist(X):
+    amount = np.array(np.repeat(0,8),dtype='float64').reshape((1,8))
+    code, counts = np.unique(X, return_counts=True)
+    
+    for j in range(len(code)):
+        amount[0,code[j]] = counts[j]
+    
+    return amount
 
 #%%
 #Calculate edit distances
@@ -107,21 +133,21 @@ start = timeit.default_timer()
 edit_dist = knn.precompute_distances(freeman_train, True)
 edit_labels = np.array(freeman_labels)
 
-pd.DataFrame(edit_dist).to_csv('edit_dist_results.csv')
+#pd.DataFrame(edit_dist).to_csv('edit_dist_results.csv')
 
-pd.DataFrame(edit_dist).to_csv('edit_dist_labels.csv')
+#pd.DataFrame(edit_dist).to_csv('edit_dist_labels.csv')
 
 end = timeit.default_timer()
 print(end-start)
 print('edit distance complete')
 
 #%%
+'''
 #Run PCA on edit distances
 pca = PCA(n_components=200).fit(edit_dist)
 print(pca.explained_variance_ratio_.sum())
 edit_dist_pca = pca.transform(edit_dist)
 
-#%%
 #Split train and test
 dist_train, dist_val, label_train, label_val = train_test_split(edit_dist_pca,
                                                     edit_labels,train_size=.9)
@@ -157,29 +183,46 @@ lmnn_hist_acc = accuracy_score(label_val,hist_predict)
 
 end = timeit.default_timer()
 print(end-start)
+'''
 
 #%%
-#Save models
-filename = 'lmnn_dist.sav'
-pickle.dump(lmnn_dist, open(filename, 'wb'))
-filename = 'KNN_dist.sav'
-pickle.dump(KNN_dist, open(filename, 'wb'))
-filename = 'lmnn_hist.sav'
-pickle.dump(lmnn_hist, open(filename, 'wb'))
-filename = 'KNN_hist.sav'
-pickle.dump(KNN_hist, open(filename, 'wb'))
+#LMNN using freeman codes and edit distances or freeman histograms
+#inputs: new freeman code, training edit dists or freeman hists, 
+#   training labels, k,  lmnn model
+#   metric refers to edit distance or freeman code histogram (dist or hist)
+#output: predicted label for new freeman code
+def lmnn(testX, X, y, k, lmnn_model, metric='dist'):
+    if metric == 'dist':
+        #Calculate edit distance between new observation and training examples
+        dists = []
+        for x in X:
+            dist = knn.precompute_distances([testX,x], edit=True)
+            dists = dists + [dist[0,1]]
+        testX = np.array(dists).reshape((1,len(dists)))
+    elif metric == 'hist':
+        #Calculate frequency of each freeman digit
+        testX = np.array(freeman_freq_hist(testX))
+    
+    #Use LMNN for metric learning
+    X_lmnn = lmnn_model.transform(X)
+    testX_lmnn = lmnn_model.transform(testX)
+  
+    #Predict on transformed dataset using KNN with euclidean distance
+    pred = knn.knn(testX_lmnn.tolist()[0], X_lmnn.tolist(), y, k=k, edit=False)
+    
+    return pred
 
 #%%
-###############################################################################
-# Other
-###############################################################################
-'''
-#Send email notification when test is complete
-server = smtplib.SMTP('smtp.gmail.com', 587)
-server.connect("smtp.gmail.com",587)
-server.ehlo()
-server.starttls()
-server.login("schwinnteriscoming@gmail.com", "@lp4aCat")
-msg = 'Subject: LMNN Test Complete'
-server.sendmail("schwinnteriscoming@gmail.com", "schwinnam@gmail.com", msg)
-'''
+#Test LMNN function
+
+#train LMNN model
+start = timeit.default_timer()
+lmnn_hist = LMNN(k=3, learn_rate=1e-6).fit(np.array(freeman_hist), np.array(freeman_labels))
+end = timeit.default_timer()
+print(end-start)
+
+start = timeit.default_timer()
+test_pred = lmnn(test_feat,freeman_hist,freeman_labels, 1, lmnn_hist, metric='hist')
+end = timeit.default_timer()
+print(end-start)
+#%%
