@@ -165,19 +165,19 @@ pickle.dump(freeman_labels, open('freeman_labels_irr4.sav', 'wb'))
 pickle.dump(freeman_train, open('processed_data/freeman_train4_bigger.sav', 'wb'))
 pickle.dump(freeman_labels, open('processed_data/freeman_labels4_bigger.sav', 'wb'))
 #%%
-'''
+
 #Enocde in string for easy access in Exaptive
-freeman_total = [freeman_labels,freeman_train]
+freeman_total = [freeman_hist, freeman_labels, 1]
 pickled = codecs.encode(pickle.dumps(freeman_total), "base64").decode()
 pickled = str(pickled)
-pickle_file = open("processed_data/freeman_total_2k.txt", "w")
+pickle_file = open("processed_data/freeman_total_hist.txt", "w")
 pickle_file.write(pickled)
-'''
+
 #%%
 #Load saved dataset
 #For preprocess 1
-freeman_train = pickle.load(open('processed_data/freeman_train4_bigger.sav','r'))
-freeman_labels = pickle.load(open('processed_data/freeman_labels4_bigger.sav','r'))
+freeman_train = pickle.load(open('processed_data/freeman_train_irr3.sav','r'))
+freeman_labels = pickle.load(open('processed_data/freeman_labels_irr3.sav','r'))
 
 '''
 #From serialized string
@@ -187,18 +187,23 @@ freeman_total = pickle.loads(codecs.decode(pickled.encode(), "base64"))
 
 #%%
 #get freeman_histograms
-freeman_hist = np.array(np.repeat(0,8),dtype='float64').reshape((1,8))
-
-for i in freeman_train:
+#Calculate frequency of each direction in a freeman code
+#Input: freeman code
+#Output: count for each direction
+def freeman_freq_hist(X):
     amount = np.array(np.repeat(0,8),dtype='float64').reshape((1,8))
-    code, counts = np.unique(i, return_counts=True)
+    code, counts = np.unique(X, return_counts=True)
+    
     for j in range(len(code)):
         amount[0,code[j]] = counts[j]
-    freeman_hist = np.vstack((freeman_hist,amount))
+    
+    return amount
 
-freeman_hist = freeman_hist[1:,:]
-hist_labels = np.array(freeman_labels)
-
+#get freeman histograms for training set
+freeman_hist = []
+for i in freeman_train:
+    amount = freeman_freq_hist(i)
+    freeman_hist = freeman_hist + amount.tolist()
 
 
 
@@ -261,7 +266,7 @@ end = timeit.default_timer()
 print(end-start)
 #%%
 pred_label = np.array(pred_label)
-knn_acc = accuracy_score(val_labels_vect[:1500],pred_label)
+knn_acc = accuracy_score(val_labels_vect,pred_label)
 print(knn_acc)
 
 #%%
