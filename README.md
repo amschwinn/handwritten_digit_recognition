@@ -1,6 +1,7 @@
 # handwritten_digit_recognition
 Classify user handwritten image
 MLDM Program, Universite Jean Monnet, Saint-Etienne, France
+
 Dimitrios TSOLAKIDIS, Austin SCHWINN, Joseph RENNER
 
 # Link to GUI
