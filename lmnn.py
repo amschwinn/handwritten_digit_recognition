@@ -60,35 +60,51 @@ val_labels_vect = labels_vector[1]
 
 print('load complete')
 #%%
-'''
 #Preprocess and convert into binary images
-for i in range(len(train_images)):
-    print(i)
-    train_image = train_images[i, 0]
-    train_images[i, 0] = lm.img_preprocess(train_image)
-    #plt.imshow(binary_image, cmap = plt.cm.gray)
+def preprocess_convert(train_images):
+    for i in range(len(train_images)):
+        print(i)
+        train_image = train_images[i, 0]
+        '''
+        #Ensure the edges are padded
+        if i in [6107,14895]: 
+            train_images[i, 0] = tb.trace_boundary(train_image,threshold=0)
+        elif i in [10135,16852]:
+            train_images[i, 0] = tb.trace_boundary(train_image,threshold=.28)
+        elif i in [15219]:
+            train_images[i, 0] = tb.trace_boundary(train_image,threshold=.88)
+        elif i in [16811]:
+            train_images[i, 0] = tb.trace_boundary(train_image,threshold=.45)
+        else:
+            train_images[i, 0] = tb.trace_boundary(train_image,threshold=.2)
+        '''
+        train_images[i, 0] = lm.img_preprocess3(train_image)
+        #plt.imshow(binary_image, cmap = plt.cm.gray)
+    return train_images
+
+#train_images = train_images[:20000,:,:,:]
+#val_images = val_images[:1500,:,:,:]
+
+
+#train_images = preprocess_convert(train_images)
+val_images = preprocess_convert(val_images)
+
 
 print('preprocess complete')
-
+#%%
 #Get freeman codes for images
-freeman_list = []
-for i in range(len(train_images)):
-    print(i)
-    freeman_list = freeman_list + [fc.freeman_code(train_images[i,0,:,:])]
+def freeman_code(train_images):
+    freeman_list = []
+    for i in range(len(train_images)):
+        print(i)
+        freeman_list = freeman_list + [fc.freeman_code(train_images[i,0,:,:])]
+    return freeman_list
+
+#freeman_list = freeman_code(train_images)
+freeman_val = freeman_code(val_images)
 
 print('freeman encoding complete')
 
-
-#Take subset of freeman codes
-freeman_train = []
-freeman_labels = []
-freeman_index = []
-
-for i in sorted(random.sample(xrange(len(freeman_list)),1000)):
-    freeman_train = freeman_train + [freeman_list[i]]
-    freeman_labels = freeman_labels + [train_labels_vect[i]]
-    freeman_index = freeman_index + [i]
-'''
 #%%
 #Load saved dataset
 #Load saved dataset
@@ -114,6 +130,11 @@ freeman_hist = []
 for i in freeman_train:
     amount = freeman_freq_hist(i)
     freeman_hist = freeman_hist + amount.tolist()
+    
+freeman_hist_val = []
+for i in freeman_val:
+    amount = freeman_freq_hist(i)
+    freeman_hist_val  += amount.tolist()
 
 #%%
 #Calculate edit distances
@@ -209,6 +230,7 @@ def lmnn(testX, X, y, k, metric='dist'):
         pickled = urllib.urlopen("https://raw.githubusercontent.com/amschwinn/common_files/master/lmnn_hist.txt").read()
         lmnn_hist = pickle.loads(codecs.decode(pickled.encode(), "base64"))
         lmnn_model = lmnn_hist[0]
+        #lmnn_model = lmnn_hist
     
     #Use LMNN for metric learning
     X_lmnn = lmnn_model.transform(X)
@@ -217,8 +239,8 @@ def lmnn(testX, X, y, k, metric='dist'):
     #Predict on transformed dataset using KNN with euclidean distance
     pred = knn.knn(testX_lmnn.tolist()[0], X_lmnn.tolist(), y, k=k, edit=False)
     
-    print(X_lmnn)
-    print(testX_lmnn)
+    #print(X_lmnn)
+    #print(testX_lmnn)
     return pred
 
 #%%
@@ -229,32 +251,52 @@ print('hist')
 start = timeit.default_timer()
 lmnn_hist = LMNN(k=5, learn_rate=1e-6).fit(freeman_hist, freeman_labels)
 end = timeit.default_timer()
+print('hist train time')
 print(end-start)
-#%%
+'''
 print('dist')
 start = timeit.default_timer()
 lmnn_dist = LMNN(k=5, learn_rate=1e-6).fit(edit_dist, freeman_labels)
 end = timeit.default_timer()
+print('edit train time')
 print(end-start)
+'''
 #%%
-test_feat = freeman_train[1]
-#%%
-#Predict
+#Test full iteration
+pred_label_edit = []
+print('edit lmnn')
 start = timeit.default_timer()
-test_pred = lmnn(test_feat,freeman_hist,freeman_labels, k=1, metric='hist')
+it = 0
+for i in freeman_val:
+    pred = lmnn(i,freeman_train,freeman_labels, k=1, metric='dist')
+    pred_label_edit += [pred]
+    print(it)
+    it += 1
 end = timeit.default_timer()
+print('edit lmnn run')
 print(end-start)
-#%%
-#Predict
-start = timeit.default_timer()
-test_pred = lmnn(test_feat,freeman_train,freeman_labels, k=1, metric='dist')
-end = timeit.default_timer()
-print(end-start)
-#%%
-#Save edit distance
-#Enocde in string for easy access in Exaptive
-pickled = codecs.encode(pickle.dumps([freeman_train,freeman_labels]), "base64").decode()
-pickled = str(pickled)
-pickle_file = open("processed_data/freeman_total3.txt", "w")
-pickle_file.write(pickled)
 
+pred_label_edit = np.array(pred_label_edit)
+lmnn_acc_edit = accuracy_score(val_labels_vect,pred_label_edit)
+print('edit lmnn acc')
+print(lmnn_acc_edit)
+
+#%%
+#Test full iteration
+pred_label_hist = []
+print('hist lmnn')
+start = timeit.default_timer()
+it = 0
+for i in freeman_val:
+    pred = lmnn(i,np.array(freeman_hist),freeman_labels, k=1, metric='hist')
+    pred_label_hist += [pred]
+    print(it)
+    it += 1
+end = timeit.default_timer()
+print('hist lmnn run')
+print(end-start)
+
+pred_label_hist = np.array(pred_label_hist)
+lmnn_acc_hist = accuracy_score(val_labels_vect,pred_label_hist)
+print('hist lmnn acc')
+print(lmnn_acc_hist)

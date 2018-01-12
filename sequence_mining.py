@@ -3,7 +3,12 @@ from knn import edit_distance
 from sklearn.cluster import DBSCAN
 from numpy import zeros
 import pickle
+import numpy as np
 from numpy import mean, floor, array
+import urllib
+from PIL import Image
+import base64
+import cStringIO
 
 # Returns true if seq1 is a subsequence of seq2
 # m is length of str1, n is length of str2
@@ -115,7 +120,7 @@ def find_match(seq, subsequence):
 def get_freq_sequences(digit):
     if type(digit) == int:
         digit = str(digit)
-    f = open('freq_seqs/freq_seqs.txt', 'r')
+    f = urllib.urlopen('https://raw.githubusercontent.com/amschwinn/common_files/master/freq_seqs.txt')
     seq = []
     sup = []
     for line in f:
@@ -196,17 +201,18 @@ def subseq_to_grid(code):
     return array(grid)
 
 
-
+#%%
 if __name__ == "__main__":
     digit = '9'
+    print('check1')
     seqs, sups = get_freq_sequences(digit)
     grid = subseq_to_grid(seqs[0])
-
+    print('check2')
     import matplotlib.image as mpimg
 
     mpimg.imsave('freq_seqs/' + digit + '.png', grid * 255, cmap = 'gray')
     exit(0)
-
+    print('check3')
     freeman_train = pickle.load(open('processed_data/freeman_train3.sav','r'))
     freeman_labels = pickle.load(open('processed_data/freeman_labels3.sav','r'))
 
@@ -216,7 +222,7 @@ if __name__ == "__main__":
             digit_codes[freeman_labels[i]] = [freeman_train[i]]
         else:
             digit_codes[freeman_labels[i]].append(freeman_train[i])
-
+    print('check4')
     digit = 9
     min_sup_thresh = 0.55    # minimum support threshold
     max_gap = 2             # max gap between elements of a subsequence
@@ -225,13 +231,143 @@ if __name__ == "__main__":
     num_total_seq = len(digit_codes[digit])
     minsup = int(round(len(digit_codes[digit]) * min_sup_thresh))
     min_length = int(round(mean([len(x) for x in digit_codes[digit]]) * min_len_thresh))
+    print('check5')
     seqs, sup = mine_seqs(digit_codes[digit], minsup=minsup, max_gap=max_gap, min_length=min_length)
     seq_sup = zip(seqs, sup)
     seq_sup.sort(key=lambda x: x[1])
     seqs, sup = zip(*seq_sup)
     dists = pairwise_dists(seqs)
+    print('check6')
     clusterer = DBSCAN(eps=cluster_max_dist,min_samples=2,metric='precomputed')
     clusterer.fit(dists)
     final_seqs, final_sups = merge_clusters(seqs,sup,clusterer.labels_,dists,num_total_seq)
     print final_seqs
     print final_sups
+
+#%%
+def reverse_freeman(row,col,code):
+    if code == 0:
+        row += -1
+        col += 0
+    if code == 1:
+        row += -1
+        col += 1
+    if code == 2:
+        row += 0
+        col += 1
+    if code == 3:
+        row += 1
+        col += 1
+    if code == 4:
+        row += 1
+        col += 0
+    if code == 5:
+        row += 1
+        col += -1
+    if code == 6:
+        row += 0
+        col += -1
+    if code == 7:
+        row += -1
+        col += -1
+    return row, col
+
+
+
+[ 2, 2, 3, 4, 5, 4, 4, 4, 4, 4, 4, 3, 2, 2, 2, 2, 2, 1, 2, 2 ]
+#%%
+###############################################################################
+#Predict on new test digit
+###############################################################################
+digit = '2'
+seqs, sups = get_freq_sequences(digit)
+seq = [2,2,2,3,2,3,2,3,3,2,3,3,2,3,4,3,4,4,4,4,5,5,5,3,2,2,2,1,2,3,4,4,5,6,6,5,6,6,6,6,6,6,6,7,7,0,1,1,1,1,1,1,0,0,7,7,7,6,7,7,6,7,6,7,5,5,6,7,0,0,1]
+best_i = [] 
+seq_out = [] 
+best_dist = []
+for subsequence in seqs:
+    i, out, dist = find_match(seq, subsequence)
+    best_i += [i]
+    seq_out += [out] 
+    best_dist += [dist]
+    
+#%%
+index = best_dist.index(min(best_dist))
+best_i = best_i[index] 
+seq_out = seq_out[index] 
+best_dist = best_dist[index]
+
+
+
+#%%
+#For full digit
+full = np.zeros((50,50))
+row = 20
+col = 20
+full[row,col] = 1
+i = 0
+while i < len(seq):
+    if i == best_i:
+        for code in seq_out:
+            row, col = reverse_freeman(row,col,code)
+            full[row,col] = 255
+            i += 1
+    else:       
+        row, col = reverse_freeman(row,col,seq[i])
+        full[row,col] = 122
+        i += 1
+#For sub digit
+sub = np.zeros((50,50))
+row = 20
+col = 20
+sub[row,col] = 1
+i = 0
+for code in seq_out:
+    row, col = reverse_freeman(row,col,code)
+    sub[row,col] = 255
+    
+#%%
+img = full
+
+x_min = np.min((np.sum(img,axis=0) != 0).nonzero())
+x_max = np.max((np.sum(img,axis=0) != 0).nonzero())
+y_min = np.min((np.sum(img,axis=1) != 0).nonzero())
+y_max = np.max((np.sum(img,axis=1) != 0).nonzero())
+
+#Get the bound box size
+if (x_max - x_min) > (y_max - y_min):
+    bound = (x_max - x_min)
+else:
+    bound = (y_max - y_min)
+
+full = img[y_min-10:y_max+10,x_min-10:x_max+10]
+
+img = sub
+
+x_min = np.min((np.sum(img,axis=0) != 0).nonzero())
+x_max = np.max((np.sum(img,axis=0) != 0).nonzero())
+y_min = np.min((np.sum(img,axis=1) != 0).nonzero())
+y_max = np.max((np.sum(img,axis=1) != 0).nonzero())
+
+#Get the bound box size
+if (x_max - x_min) > (y_max - y_min):
+    bound = (x_max - x_min)
+else:
+    bound = (y_max - y_min)
+
+sub = img[y_min-10:y_max+10,x_min-10:x_max+10]
+
+#%%
+#Save the images to data URI
+check = Image.fromarray(sub).resize((sub.shape[0]*10,sub.shape[1]*10)).convert('L')
+check2 = Image.fromarray(full).resize((full.shape[0]*10,full.shape[1]*10)).convert('L')
+
+buffer1 = cStringIO.StringIO()
+check.save(buffer1, format="PNG")
+img_str = base64.b64encode(buffer1.getvalue())
+img_str = 'data:image/png;base64,'+img_str
+
+buffer2 = cStringIO.StringIO()
+check2.save(buffer2, format="PNG")
+img_str2 = base64.b64encode(buffer2.getvalue())
+img_str2 = 'data:image/png;base64,'+img_str2

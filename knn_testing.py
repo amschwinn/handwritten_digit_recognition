@@ -82,7 +82,7 @@ def preprocess_convert(train_images):
         else:
             train_images[i, 0] = tb.trace_boundary(train_image,threshold=.2)
         '''
-        train_images[i, 0] = lm.img_preprocess3(train_image)
+        train_images[i, 0] = lm.img_preprocess(train_image)
         #plt.imshow(binary_image, cmap = plt.cm.gray)
     return train_images
 
@@ -90,7 +90,7 @@ def preprocess_convert(train_images):
 #val_images = val_images[:1500,:,:,:]
 
 
-train_images = preprocess_convert(train_images)
+#train_images = preprocess_convert(train_images)
 val_images = preprocess_convert(val_images)
 
 
@@ -104,7 +104,7 @@ def freeman_code(train_images):
         freeman_list = freeman_list + [fc.freeman_code(train_images[i,0,:,:])]
     return freeman_list
 
-freeman_list = freeman_code(train_images)
+#freeman_list = freeman_code(train_images)
 freeman_val = freeman_code(val_images)
 
 print('freeman encoding complete')
@@ -165,19 +165,19 @@ pickle.dump(freeman_labels, open('freeman_labels_irr4.sav', 'wb'))
 pickle.dump(freeman_train, open('processed_data/freeman_train4_bigger.sav', 'wb'))
 pickle.dump(freeman_labels, open('processed_data/freeman_labels4_bigger.sav', 'wb'))
 #%%
-
+'''
 #Enocde in string for easy access in Exaptive
 freeman_total = [freeman_hist, freeman_labels, 1]
 pickled = codecs.encode(pickle.dumps(freeman_total), "base64").decode()
 pickled = str(pickled)
 pickle_file = open("processed_data/freeman_total_hist.txt", "w")
 pickle_file.write(pickled)
-
+'''
 #%%
 #Load saved dataset
 #For preprocess 1
-freeman_train = pickle.load(open('processed_data/freeman_train_irr3.sav','r'))
-freeman_labels = pickle.load(open('processed_data/freeman_labels_irr3.sav','r'))
+freeman_train = pickle.load(open('processed_data/freeman_train_bay.sav','r'))
+freeman_labels = pickle.load(open('processed_data/freeman_labels_bay.sav','r'))
 
 '''
 #From serialized string
@@ -284,3 +284,4 @@ print(end-start)
 #Should be edit idst of 5
 knn.edit_distance(['i','n','t','e','n','t','i','o','n'],
                   ['e','x','e','c','u','t','i','o','n'])
+
